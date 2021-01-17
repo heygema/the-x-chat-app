@@ -10,6 +10,8 @@ export default function App() {
   const isLoadingComplete = useCachedResources();
   const colorScheme = useColorScheme();
 
+  console.log('color scheme ?', colorScheme)
+
   if (!isLoadingComplete) {
     return null;
   } else {
