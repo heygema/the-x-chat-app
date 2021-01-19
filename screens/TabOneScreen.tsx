@@ -1,38 +1,67 @@
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { io } from "socket.io-client";
+import { TextInput } from "react-native-paper";
+import DropDown from "react-native-paper-dropdown";
 
-import EditScreenInfo from "../components/EditScreenInfo";
 import { Text, View } from "../components/Themed";
-
-let socket = io("ws://localhost:4000");
+import { gql, useQuery } from "@apollo/client";
 
 export default function TabOneScreen() {
-  const [message, setMessage] = React.useState('')
+  const { data, error, loading } = useQuery(gql`
+    query {
+      users {
+        name
+        email
+      }
+    }
+  `);
 
+  const userList: Array<{ label: string; value: string }> = (
+    (data && data.users) ||
+    []
+  ).map(({ email }: { email: string; name: string }) => ({
+    label: email,
+    value: email
+  }));
+
+  const [showDropDown, setShowDropDown] = React.useState(true);
+
+  const [user, setUser] = React.useState("");
 
   React.useEffect(() => {
-    socket.emit("join-friend-room", 10);
+    if (!user) {
+      setUser(userList[0]?.value || "");
+    }
 
-    socket.on('message', (message: string) => {
-      setMessage(message);
-    })
+    return () => {};
+  }, [data]);
 
-
-    return () => {
-      socket.disconnect();
-    };
-  });
+  if (loading || error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          {loading ? "Loading ..." : error ? "Error" : "Loading..."}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{message}</Text>
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
+      <Text style={styles.title}>{"Pick a user"}</Text>
+      <DropDown
+        label={"User"}
+        mode={"outlined"}
+        value={user}
+        setValue={setUser}
+        list={userList}
+        visible={showDropDown}
+        showDropDown={() => setShowDropDown(true)}
+        onDismiss={() => setShowDropDown(false)}
+        inputProps={{
+          right: <TextInput.Icon name={"menu-down"} />
+        }}
       />
-      <EditScreenInfo path="/screens/TabOneScreen.tsx" />
     </View>
   );
 }
@@ -40,8 +69,7 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center"
+    padding: 20
   },
   title: {
     fontSize: 20,

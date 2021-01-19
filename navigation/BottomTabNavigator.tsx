@@ -23,9 +23,7 @@ export default function BottomTabNavigator() {
         name="Profiles"
         component={TabOneNavigator}
         options={{
-          tabBarIcon: ({ color }) => (
-            <TabBarIcon name="ios-cog" color={color} />
-          )
+          tabBarIcon: ({ color }) => <TabBarIcon name="ios-cog" color={color} />
         }}
       />
       <BottomTab.Screen
@@ -57,7 +55,7 @@ function TabOneNavigator() {
       <TabOneStack.Screen
         name="TabOneScreen"
         component={TabOneScreen}
-        options={{ headerTitle: "Tab One Title" }}
+        options={{ headerTitle: "Profiles Picker" }}
       />
     </TabOneStack.Navigator>
   );
@@ -71,7 +69,12 @@ function TabTwoNavigator() {
       <TabTwoStack.Screen
         name="TabTwoScreen"
         component={TabTwoScreen}
-        options={{ headerTitle: "Tab Two Title" }}
+        options={{ headerTitle: "Friends" }}
+      />
+      <TabTwoStack.Screen
+        name="ChatScreen"
+        component={TabTwoScreen}
+        options={{ headerTitle: "Chat" }}
       />
     </TabTwoStack.Navigator>
   );
