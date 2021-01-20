@@ -1,78 +1,113 @@
 import { gql, useQuery } from "@apollo/client";
 import * as React from "react";
 import { ScrollView, StyleSheet } from "react-native";
-import { Card, Title, TextInput, Paragraph, Button } from "react-native-paper";
+import { TextInput, Button } from "react-native-paper";
 
 import { Text, View } from "../components/Themed";
+import { socket } from "../helpers/socket";
 import { useUserStore } from "../helpers/store";
 
-const chats = [
-  {
-    id: 1,
-    sender: {
-      email: "bobo@test.com"
-    },
-    content: "Lorem Ipsum"
-  },
-  {
-    id: 2,
-    sender: {
-      email: "bibi@test.com"
-    },
-    content: "Lorem Ipsum"
-  },
-  {
-    id: 2,
-    sender: {
-      email: "bibi@test.com"
-    },
-    content: "Lorem Ipsum"
-  }
-];
-
-function ChatBubble({
-  sender,
-  content
-}: {
-  id: number;
+type MessageItem = {
+  content: string;
+  id: string;
   sender: {
     email: string;
   };
-  content: string;
-}) {
+  createAt: string;
+};
+
+function ChatBubble({ sender, content }: MessageItem) {
   const email = useUserStore((state) => state.user as string);
 
   let isMe = sender.email === email;
 
   return (
-    <View style={[styles.chatBubble, isMe && { backgroundColor: "#E6E5EA", alignSelf: 'flex-end' }]}>
+    <View
+      style={[
+        styles.chatBubble,
+        isMe && { backgroundColor: "#E6E5EA", alignSelf: "flex-end" }
+      ]}
+    >
       <Text lightColor={isMe ? "#000" : "#FFF"}>{content}</Text>
     </View>
   );
 }
 
 export default function ChatScreen({
-  route: { params }
+  route: {
+    params: { roomId }
+  }
 }: {
-  route: { params: string };
+  route: { params: { roomId: string } };
 }) {
+  const email = useUserStore((state) => state.user as string);
   const [msg, setMsg] = React.useState("");
+  let scrollViewRef = React.useRef<any>();
+
+  const { data, refetch } = useQuery(
+    gql`
+      query Messages($roomId: String!) {
+        messages(roomId: $roomId) {
+          id
+          content
+          sender {
+            email
+          }
+        }
+      }
+    `,
+    {
+      variables: {
+        roomId
+      }
+    }
+  );
+
+  React.useEffect(() => {
+    refetch();
+    return () => {};
+  }, [data]);
+
+  React.useEffect(() => {
+    socket.emit("join-friend-room", roomId);
+    socket.on("message-from-server", (_: any) => {
+      refetch();
+    });
+
+    return () => {
+      socket.off();
+    };
+  }, [socket.id]);
 
   const sendMsg = () => {
+    if (msg !== "") {
+      socket.emit("message-from-client", {
+        email,
+        content: msg,
+        roomId
+      });
+    }
     setMsg("");
   };
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={{
-          padding: 20
-        }}
-      >
-        {chats.map((chat, index) => (
-          <ChatBubble {...chat} key={String(index)} />
-        ))}
-      </ScrollView>
+      <View style={{ flex: 1 }}>
+        <ScrollView
+          ref={scrollViewRef}
+          onContentSizeChange={() => {
+            scrollViewRef &&
+              scrollViewRef?.current?.scrollToEnd({ animated: true });
+          }}
+          style={{
+            padding: 20
+          }}
+        >
+          {((data && data.messages) || []).map((chat, index) => (
+            <ChatBubble {...chat} key={String(index)} />
+          ))}
+        </ScrollView>
+      </View>
       <View style={styles.bottomBox}>
         <View style={styles.inputContainer}>
           <TextInput
