@@ -101,9 +101,11 @@ export default function ChatScreen({
           }}
           style={styles.scrollView}
         >
-          {((data && data.messages) || []).map((chat, index) => (
-            <ChatBubble {...chat} key={String(index)} />
-          ))}
+          {((data && data.messages) || []).map(
+            (chat: MessageItem, index: number) => (
+              <ChatBubble {...chat} key={String(index)} />
+            )
+          )}
         </ScrollView>
       </View>
       <View style={styles.bottomBox}>
