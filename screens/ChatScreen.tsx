@@ -99,9 +99,7 @@ export default function ChatScreen({
             scrollViewRef &&
               scrollViewRef?.current?.scrollToEnd({ animated: true });
           }}
-          style={{
-            padding: 20
-          }}
+          style={styles.scrollView}
         >
           {((data && data.messages) || []).map((chat, index) => (
             <ChatBubble {...chat} key={String(index)} />
@@ -154,5 +152,9 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     padding: 15,
     backgroundColor: "#00D549"
+  },
+  scrollView: {
+    paddingHorizontal: 20,
+    paddingBottom: 110
   }
 });
