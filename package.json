@@ -31,6 +31,7 @@
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-40.0.1.tar.gz",
+    "react-native-dropdown-picker": "^3.7.8",
     "react-native-gesture-handler": "~1.8.0",
     "react-native-paper": "^4.7.0",
     "react-native-paper-dropdown": "^0.0.5",

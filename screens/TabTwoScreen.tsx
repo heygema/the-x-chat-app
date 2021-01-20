@@ -1,43 +1,93 @@
+import { gql, useQuery } from "@apollo/client";
+import { useNavigation } from "@react-navigation/native";
 import * as React from "react";
-import { StyleSheet } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
+import { Card, Title, Paragraph } from "react-native-paper";
 
-import EditScreenInfo from "../components/EditScreenInfo";
 import { Text, View } from "../components/Themed";
-import { socket } from "../helpers/socket";
+import { useUserStore } from "../helpers/store";
+
+const FriendCard = ({
+  name,
+  ...props
+}: {
+  name: string;
+  [key: string]: any;
+}) => (
+  <Card
+    style={{
+      margin: 10
+    }}
+    {...props}
+  >
+    <Card.Content>
+      <Title>{name}</Title>
+      <Paragraph>{`Press to chat with ${name}`}</Paragraph>
+    </Card.Content>
+  </Card>
+);
 
 export default function TabTwoScreen() {
-  const [message, setMessage] = React.useState("");
+  const email = useUserStore((state) => state.user as string);
+
+  const navigation = useNavigation();
+
+  const onCardPress = (roomId: string, name: string) =>
+    navigation.navigate("ChatScreen", { roomId, name });
+
+  const { data, error, loading, refetch } = useQuery(
+    gql`
+      query Friends($email: String!) {
+        friends(email: $email) {
+          id
+          users {
+            name
+          }
+        }
+      }
+    `,
+    {
+      variables: {
+        email
+      }
+    }
+  );
 
   React.useEffect(() => {
-    socket.emit("join-friend-room", 10);
+    refetch();
+    return () => {};
+  }, [data]);
 
-    socket.on("message", (message: string) => {
-      setMessage(message);
-    });
+  let friendList = (data && data.friends) || [];
 
-    return () => {
-      socket.disconnect();
-    };
-  });
+  if (loading || error) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.title}>
+          {loading ? "Loading ..." : error ? "Error" : "Loading..."}
+        </Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tab Two</Text>
-      <View
-        style={styles.separator}
-        lightColor="#eee"
-        darkColor="rgba(255,255,255,0.1)"
-      />
-      <EditScreenInfo path="/screens/TabTwoScreen.tsx" />
+      <ScrollView>
+        {friendList.map(({ users: [user], id }: any, index: number) => (
+          <FriendCard
+            key={index}
+            name={user && user.name}
+            onPress={() => onCardPress(id, user.name || "")}
+          />
+        ))}
+      </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center"
+    flex: 1
   },
   title: {
     fontSize: 20,

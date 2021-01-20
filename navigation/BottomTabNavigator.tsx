@@ -5,6 +5,7 @@ import * as React from "react";
 
 import Colors from "../constants/Colors";
 import useColorScheme from "../hooks/useColorScheme";
+import ChatScreen from "../screens/ChatScreen";
 import TabOneScreen from "../screens/TabOneScreen";
 import TabTwoScreen from "../screens/TabTwoScreen";
 import { BottomTabParamList, TabOneParamList, TabTwoParamList } from "../types";
@@ -73,8 +74,10 @@ function TabTwoNavigator() {
       />
       <TabTwoStack.Screen
         name="ChatScreen"
-        component={TabTwoScreen}
-        options={{ headerTitle: "Chat" }}
+        component={ChatScreen}
+        options={({ route }) => ({
+          headerTitle: `chat with ${route.params.name}`
+        })}
       />
     </TabTwoStack.Navigator>
   );

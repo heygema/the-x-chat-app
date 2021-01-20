@@ -14,5 +14,5 @@ export type TabOneParamList = {
 
 export type TabTwoParamList = {
   TabTwoScreen: undefined;
-  ChatScreen: {roomId: string};
+  ChatScreen: {roomId: string, name: string};
 };

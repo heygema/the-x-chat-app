@@ -1,10 +1,10 @@
 import * as React from "react";
 import { StyleSheet } from "react-native";
-import { TextInput } from "react-native-paper";
-import DropDown from "react-native-paper-dropdown";
+import DropDownPicker from "react-native-dropdown-picker";
+import { gql, useQuery } from "@apollo/client";
 
 import { Text, View } from "../components/Themed";
-import { gql, useQuery } from "@apollo/client";
+import { useUserStore } from "../helpers/store";
 
 export default function TabOneScreen() {
   const { data, error, loading } = useQuery(gql`
@@ -24,17 +24,8 @@ export default function TabOneScreen() {
     value: email
   }));
 
-  const [showDropDown, setShowDropDown] = React.useState(true);
-
-  const [user, setUser] = React.useState("");
-
-  React.useEffect(() => {
-    if (!user) {
-      setUser(userList[0]?.value || "");
-    }
-
-    return () => {};
-  }, [data]);
+  const user = useUserStore((state) => state.user as string);
+  const setUser = useUserStore((state) => state.selectUser as Function);
 
   if (loading || error) {
     return (
@@ -49,17 +40,17 @@ export default function TabOneScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{"Pick a user"}</Text>
-      <DropDown
-        label={"User"}
-        mode={"outlined"}
-        value={user}
-        setValue={setUser}
-        list={userList}
-        visible={showDropDown}
-        showDropDown={() => setShowDropDown(true)}
-        onDismiss={() => setShowDropDown(false)}
-        inputProps={{
-          right: <TextInput.Icon name={"menu-down"} />
+      <DropDownPicker
+        items={userList}
+        defaultValue={user}
+        containerStyle={{ height: 40 }}
+        style={{ backgroundColor: "#fafafa" }}
+        itemStyle={{
+          justifyContent: "flex-start"
+        }}
+        dropDownStyle={{ backgroundColor: "#fafafa" }}
+        onChangeItem={({ value }: { value: string }) => {
+          setUser(value);
         }}
       />
     </View>
@@ -69,11 +60,14 @@ export default function TabOneScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20
+    padding: 40,
+    justifyContent: "center"
   },
   title: {
     fontSize: 20,
-    fontWeight: "bold"
+    marginBottom: 30,
+    fontWeight: "bold",
+    alignSelf: "center"
   },
   separator: {
     marginVertical: 30,
