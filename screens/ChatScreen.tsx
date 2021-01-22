@@ -1,7 +1,7 @@
 import { gql, useQuery } from "@apollo/client";
+import moment from "moment";
 import * as React from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { TextInput, Button } from "react-native-paper";
+import { ScrollView, TextInput, StyleSheet, Button } from "react-native";
 
 import { Text, View } from "../components/Themed";
 import { socket } from "../helpers/socket";
@@ -13,22 +13,19 @@ type MessageItem = {
   sender: {
     email: string;
   };
-  createAt: string;
+  createdAt: string;
 };
 
-function ChatBubble({ sender, content }: MessageItem) {
-  const email = useUserStore((state) => state.user as string);
+function ChatBubble({ sender, content, createdAt }: MessageItem) {
+  let email = useUserStore((state) => state.user as string);
+  let time = moment(createdAt).format('hh:mm')
 
   let isMe = sender.email === email;
 
   return (
-    <View
-      style={[
-        styles.chatBubble,
-        isMe && { backgroundColor: "#E6E5EA", alignSelf: "flex-end" }
-      ]}
-    >
-      <Text lightColor={isMe ? "#000" : "#FFF"}>{content}</Text>
+    <View style={[styles.chatBubble, isMe && styles.meChatBubble]}>
+      <Text lightColor={isMe ? "#FFF" : "#000"}>{content}</Text>
+      <Text lightColor={isMe ? "#FFF" : "#000"}>{time}</Text>
     </View>
   );
 }
@@ -64,13 +61,17 @@ export default function ChatScreen({
   );
 
   React.useEffect(() => {
+    scrollViewRef && scrollViewRef?.current?.scrollToEnd({ animated: false });
     refetch();
     return () => {};
   }, [data]);
 
   React.useEffect(() => {
+    if (socket.disconnected) {
+      socket.connect();
+    }
     socket.emit("join-friend-room", roomId);
-    socket.on("message-from-server", (_: any) => {
+    socket.on("message-from-server", () => {
       refetch();
     });
 
@@ -120,7 +121,7 @@ export default function ChatScreen({
           />
         </View>
         <View style={styles.buttonContainer}>
-          <Button onPress={sendMsg}>SEND</Button>
+          <Button title="SEND" color="#FFFFFF" onPress={sendMsg} />
         </View>
       </View>
     </View>
@@ -141,9 +142,20 @@ const styles = StyleSheet.create({
     width: "80%"
   },
   bottomBox: { height: 50, flexDirection: "row" },
-  inputContainer: { flex: 1, justifyContent: "center" },
+  inputContainer: {
+    flex: 1,
+    justifyContent: "center",
+    padding: 10,
+    elevation: 3,
+    shadowRadius: 100,
+    shadowOffset: {
+      width: 10,
+      height: 100
+    },
+    shadowColor: "#333"
+  },
   buttonContainer: {
-    backgroundColor: "#000",
+    backgroundColor: "#00D549",
     flex: 0.3,
     justifyContent: "center",
     alignItems: "center"
@@ -153,7 +165,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginVertical: 10,
     padding: 15,
-    backgroundColor: "#00D549"
+    backgroundColor: "#E6E5EA"
+  },
+  meChatBubble: {
+    backgroundColor: "#00D549",
+    alignSelf: "flex-end"
   },
   scrollView: {
     paddingHorizontal: 20,
